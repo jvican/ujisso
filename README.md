@@ -18,6 +18,7 @@ Having imported the dependencies of Akka and Spray for [server routing](http://s
 ### Example
 ```scala
 import spray.routing.SimpleRoutingApp
+import ujisso._
 
 object Main extends App with SimpleRoutingApp {
   implicit val system = ActorSystem("my-system")
