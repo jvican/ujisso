@@ -1,7 +1,7 @@
 # UJI SSO authentication in Scala [![Build Status](https://travis-ci.org/jvican/ujisso.svg?branch=master)](https://travis-ci.org/jvican/ujisso)
 
 Suppose you feel inspired and excited about taking a new adventure. You come accross a cool language called Scala, you become proficient in it and you want to use it everywhere,
-including your internship project. Well, ok, that was my case. But it can be yours too. So here you have a library I have developed to allow authentication against the UJI SSO.
+including your internship project. Well, ok, that was my case. But it can be yours too. So here you have a library I have developed to allow authentication against the UJI SSO (Jaume I University, Spain).
   
 This minimal module has been ported from Java (servlets api) and php code, the only two existing alternatives until now. They were developed by the UJI itself.
 However, this library is totally __async__, built up on top of [Spray](http://www.spray.io) and [Akka](http://www.akka.io). 
