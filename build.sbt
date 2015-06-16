@@ -39,7 +39,9 @@ libraryDependencies ++= {
 // Settings to publish to Sonatype
 licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/MIT"))
 
-pomExtra := <url>https://github.com/jvican/ujisso</url>
+sonatypeProfileName := "com.github.jvican"
+
+pomExtra in Global := <url>https://github.com/jvican/ujisso</url>
   <scm>
     <url>https://github.com/jvican/ujisso.git</url>
     <connection>scm:git:git@github.com:jvican/ujisso.git</connection>
