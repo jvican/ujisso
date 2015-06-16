@@ -14,6 +14,7 @@ import xmlrpc.protocol.XmlrpcProtocol._
 import xmlrpc.{Xmlrpc, XmlrpcResponse}
 
 import scala.language.postfixOps
+
 import scalaz.Scalaz._
 import scalaz._
 
