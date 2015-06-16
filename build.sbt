@@ -1,4 +1,4 @@
-name := "ujiauth"
+name := "ujisso"
 
 organization := "com.github.jvican"
 
@@ -12,7 +12,10 @@ licenses := Seq(
   "MIT License" -> url("http://www.opensource.org/licenses/mit-license.html")
 )
 
-resolvers += Resolver.sonatypeRepo("releases")
+resolvers ++= Seq(
+  Resolver.sonatypeRepo("releases"),
+  Resolver.sonatypeRepo("snapshots")
+)
 
 libraryDependencies ++= {
   val akkaVersion = "2.3.9"
@@ -32,3 +35,19 @@ libraryDependencies ++= {
     "org.specs2"          %%  "specs2-core"   % specs2Core    % "test"
   )
 }
+
+// Settings to publish to Sonatype
+licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/MIT"))
+
+pomExtra := <url>https://github.com/jvican/ujisso</url>
+  <scm>
+    <url>https://github.com/jvican/ujisso.git</url>
+    <connection>scm:git:git@github.com:jvican/ujisso.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>jvican</id>
+      <name>Jorge Vicente Cantero</name>
+      <url>https://github.com/jvican</url>
+    </developer>
+  </developers>
