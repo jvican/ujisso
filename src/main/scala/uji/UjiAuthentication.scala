@@ -27,7 +27,7 @@ trait UjiAuthentication extends UjiProtocol with HttpService {
   implicit val UjiXmlrpcServer = XmlrpcServer(XmlrpcServerUri)
 
   // Stubs for xmlrpc invocations
-  implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
+  implicit val timeout: Timeout = Timeout(7, TimeUnit.SECONDS)
   val log: LoggingAdapter
 
   implicit def executionContext = actorRefFactory.dispatcher
