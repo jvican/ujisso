@@ -1,4 +1,4 @@
-package api.uji
+package ujisso
 
 import akka.util.Timeout
 import spray.http.Uri
@@ -12,7 +12,7 @@ trait UjiProtocol {
   def logout: Route
 
   // The user has to implement the following method and variables
-  def hookWhenUserAuthenticated(username: String): Route
+  def hookWhenUserAuthenticated(token: String, username: String): Route
   val callbackWhenLoggedIn: Uri
   val callbackWhenLoggedOut: Uri
 

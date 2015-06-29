@@ -1,4 +1,4 @@
-package api.uji
+package ujisso
 
 import java.util.concurrent.TimeUnit
 
@@ -13,7 +13,8 @@ import spray.testkit.Specs2RouteTest
 import scala.concurrent.duration.FiniteDuration
 
 trait MyUjiAuthentication extends UjiAuthentication {
-  override def hookWhenUserAuthenticated(username: String): Route = complete(s"User $username is already logged in the system")
+  override def hookWhenUserAuthenticated(token: String, username: String): Route =
+    complete(s"User $username is already logged in the system with the token $token")
   override lazy val callbackWhenLoggedIn: Uri = Uri("http://test.uji.es/dashboard")
   override lazy val callbackWhenLoggedOut: Uri = Uri("http://test.uji.es/index")
 }
