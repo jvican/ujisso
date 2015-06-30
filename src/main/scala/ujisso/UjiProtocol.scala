@@ -11,11 +11,11 @@ trait UjiProtocol {
   def authenticated(encryptedToken: String): Route
   def logout: Route
 
-  // The user has to implement the following method and variables
+  // User implementation
   def hookWhenUserAuthenticated(token: String, username: String): Route
   val callbackWhenLoggedIn: Uri
   val callbackWhenLoggedOut: Uri
 
-  // Additional config -> Timeout for the XML-RPC calls
+  // Timeout for the XML-RPC calls
   val timeout: Timeout
 }

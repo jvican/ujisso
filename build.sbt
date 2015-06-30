@@ -21,7 +21,7 @@ libraryDependencies ++= {
   val akkaVersion = "2.3.9"
   val sprayVersion = "1.3.3"
   val base64Version = "0.2.0"
-  val xmlrpcVersion = "1.0.1"
+  val xmlrpcVersion = "1.1"
   val scalazVersion = "7.1.3"
   val specs2Core = "2.4.15"
 

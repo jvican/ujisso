@@ -7,15 +7,12 @@ import akka.util.Timeout
 import base64.Decode
 import spray.http.{HttpCookie, StatusCodes, Uri}
 import spray.routing._
-import spray.routing.directives.OnCompleteFutureMagnet
-import ujisso.UjiError.UjiErrors
-import ujisso.XmlrpcWithSprayRouting._
+import ujisso.UjiError._
 import xmlrpc.Xmlrpc.XmlrpcServer
-import xmlrpc.protocol.Deserializer.{AnyErrors, Deserialized, Fault}
+import xmlrpc.protocol.Deserializer.AnyErrors
 import xmlrpc.protocol.XmlrpcProtocol._
 import xmlrpc.{Xmlrpc, XmlrpcResponse}
 
-import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 import scalaz.Scalaz._
 import scalaz._
@@ -23,14 +20,14 @@ import scalaz._
 /**
  * Uji Authentication protocol at this moment (2015-16). Mix in to use.
  */
-trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService {
+trait UjiAuthentication extends UjiProtocol with UjiRejections with SprayRoutingWithXmlrpc with HttpService {
   val XmlrpcPath = "xmlrpc.uji.es/lsmSSO-83/"
   val XmlrpcServerUri: String = "http://" + XmlrpcPath + "server.php"
   implicit val UjiXmlrpcServer = XmlrpcServer(XmlrpcServerUri)
 
   // Stubs for xmlrpc invocations
   implicit val timeout: Timeout = Timeout(7, TimeUnit.SECONDS)
-  val log: LoggingAdapter
+  implicit val log: LoggingAdapter
 
   implicit def executionContext = actorRefFactory.dispatcher
 
@@ -81,7 +78,7 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
               case Some(cookie) => authenticated(cookie.content.trim)
               case None => parameters(TokenLabel.?) {
                 case Some(token) if token.nonEmpty => nonAuthenticatedPhase2(token)
-                case Some(token) => complete("Hey, you have tried to redirect without any UJITok, no luck boy!")
+                case Some(token) => reject(EmptyToken)
                 case None => nonAuthenticatedPhase1
               }
             }
@@ -96,19 +93,20 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
     }
 
   override def authenticated(rawToken: String): Route = {
-    def runHookOrReject(conf: LoginConfirmation) = conf match {
+    def runHookOrReject(conf: LoginConfirmation): Route = conf match {
       case confirmed if confirmed.isOk => hookWhenUserAuthenticated(confirmed.token, confirmed.authenticatedUsername)
       case unconfirmed => reject(EmptyLoginConfirmation)
     }
 
-    def logAndRedirectToLogout(errors: AnyErrors) = {
+    def logAndRedirectToLogout(errors: AnyErrors): Route = {
       errors foreach (e => log.error(e.friendlyMessage))
       log.info("Logging out because the server has not reconfirmed the existing session for the token $rawToken")
       logout
     }
 
     val f = () => isStillLogged(rawToken)
-    f.retry(runHookOrReject, logAndRedirectToLogout, RetryCheckSession)
+
+    xmlrpcCallAndRoute(f, logAndRedirectToLogout, runHookOrReject, RetryCheckSession)
   }
 
   override def nonAuthenticatedPhase1: Route = {
@@ -125,8 +123,8 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
       reject(NewSessionFailure)
     }
 
-    val f = () => openUserSession
-    f.retry(setCookiesAndRedirect, logAndReject, RetryNewSession)
+    val call = () => openUserSession
+    xmlrpcCallAndRoute(call, logAndReject, setCookiesAndRedirect, RetryNewSession)
   }
 
   override def nonAuthenticatedPhase2(token: String): Route =
@@ -157,9 +155,6 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
       }
     }
   }
-
-  private[ujisso] def logErrors[T <: {val friendlyMessage: String}](errors: NonEmptyList[T]): Unit =
-    errors foreach (e => log.error(e.friendlyMessage))
 
   /**
    * User session opened with the Uji SSO

@@ -1,5 +1,6 @@
 package ujisso
 
+import akka.event.LoggingAdapter
 import spray.routing.{Rejection, RejectionHandler}
 
 import scalaz.NonEmptyList
@@ -10,6 +11,10 @@ sealed trait UjiError {
 
 object UjiError {
   type UjiErrors = NonEmptyList[UjiError]
+
+  type WithFriendlyMessage = {val friendlyMessage: String}
+  def logErrors[T <: WithFriendlyMessage](errors: NonEmptyList[T])(implicit log: LoggingAdapter): Unit =
+    errors foreach (e => log.error(e.friendlyMessage))
 }
 
 case class InvalidToken(encodedToken: String) extends UjiError {
@@ -25,6 +30,10 @@ trait UjiRejections {
 
   import spray.routing.Directives._
   import spray.http.StatusCodes._
+
+  case object EmptyToken extends Rejection with FailureMessage {
+    override val failureMessage: String = "The token used to redirect is empty"
+  }
 
   case object NewSessionFailure extends Rejection with FailureMessage {
     override val failureMessage: String = "A new session couldn't be opened with the server."
@@ -44,8 +53,9 @@ trait UjiRejections {
 
   object UjiRejectionHandler {
     def apply(): RejectionHandler = RejectionHandler {
+      case EmptyToken :: _ => complete(BadRequest, EmptyToken.failureMessage)
       case NewSessionFailure :: _ => complete(InternalServerError, NewSessionFailure.failureMessage)
-      case TokenDecryptionFailure :: _ => complete(InternalServerError, TokenDecryptionFailure.failureMessage)
+      case TokenDecryptionFailure :: _ => complete(BadRequest, TokenDecryptionFailure.failureMessage)
       case EmptyLoginConfirmation :: _ => complete(InternalServerError, EmptyLoginConfirmation.failureMessage)
     }
   }
