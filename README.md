@@ -10,6 +10,8 @@ A good points is that there is a lot of documentation (check out source code and
 because the existing alternatives were not very clear in the protocol specification. Now, if you want you can built your own library in your favorite language (Clojure, Ruby, etc) without any excuse. Just code.
 
 ## Tell me the secret, how to use it
+First, import into your build.sbt or mvn (the following example is using SBT):  
+`"com.github.jvican"   %%  "ujisso"  % "1.2"`
 
 Mixin the Uji Authentication trait and implement _hookWhenAuthenticated_, the function the library will execute when the authentication has succeed. After that, you have to declare a callback as an [URI](http://spray.io/documentation/1.1-SNAPSHOT/api/index.html#spray.http.Uri$), in order to redirect to that callback when the user has logged out from the UJI SSO. This callback is _callbackWhenLoggedOut_.
   
@@ -37,3 +39,17 @@ object Main extends App with SimpleRoutingApp {
 ```
   
 With this setup, if a client makes a request to _/uji/login_, your server will log in the user (if it's not already) and when this operation has succeeded, the function _hookWhenAuthenticated_ will be executed. You have to implement this function as you want. The common thing is to redirect to a private resource only available to authenticated users, as a profile page or a dashboard. If a user makes a request _/uji/logout_, he will be logged out from the UJI SSO.
+
+## Configuration details
+Sometimes, the requests to the UJI SSO can fail. To avoid these cases, the XML-RPC requests to the server will be retried three times in case of failure.
+Also, the UJI cookies stored in the client's browser will have the option httpOnly to prevent JS from access the token. The cookies are not encrypted,
+so if you are using SSL enable them with the `SecureCookies`.
+This is a default setting present in all the implementations of the SSO authenticator.
+If you would like to change this behavior, just override one of the following variables:
+```scala
+  val HttpOnlyCookies = true
+  val SecureCookies = false
+  val DefaultRetry = 3
+  val RetryNewSession = DefaultRetry
+  val RetryCheckSession = DefaultRetry
+```

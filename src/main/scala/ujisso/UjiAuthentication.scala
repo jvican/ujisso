@@ -54,6 +54,9 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
   val Spanish = UserLanguage("es")
   implicit val DefaultLanguage = Catalan
 
+  /**
+   * Default configuration settings.
+   */
   val HttpOnlyCookies = true
   val SecureCookies = false
   val DefaultRetry = 3
