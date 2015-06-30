@@ -7,12 +7,15 @@ import akka.util.Timeout
 import base64.Decode
 import spray.http.{HttpCookie, StatusCodes, Uri}
 import spray.routing._
+import spray.routing.directives.OnCompleteFutureMagnet
 import ujisso.UjiError.UjiErrors
+import ujisso.XmlrpcWithSprayRouting._
 import xmlrpc.Xmlrpc.XmlrpcServer
-import xmlrpc.protocol.Deserializer.{AnyErrors, Fault}
+import xmlrpc.protocol.Deserializer.{AnyErrors, Deserialized, Fault}
 import xmlrpc.protocol.XmlrpcProtocol._
 import xmlrpc.{Xmlrpc, XmlrpcResponse}
 
+import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 import scalaz.Scalaz._
 import scalaz._
@@ -68,7 +71,7 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
 
   val routesUjiAuth =
     pathPrefix("uji") {
-      handleRejections(UjiRejectionHandler.apply) {
+      handleRejections(UjiRejectionHandler.apply()) {
         path("login") {
           get {
             optionalCookie(SessionName) {
@@ -95,13 +98,14 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
       case unconfirmed => reject(EmptyLoginConfirmation)
     }
 
-    def logAndReject(errors: AnyErrors) = {
+    def logAndRedirectToLogout(errors: AnyErrors) = {
       errors foreach (e => log.error(e.friendlyMessage))
       log.info("Logging out because the server has not reconfirmed the existing session for the token $rawToken")
       logout
     }
 
-    retry(() => isStillLogged(rawToken), runHookOrReject, logAndReject, RetryCheckSession)
+    val f = () => isStillLogged(rawToken)
+    f.retry(runHookOrReject, logAndRedirectToLogout, RetryCheckSession)
   }
 
   override def nonAuthenticatedPhase1: Route = {
@@ -118,25 +122,8 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with HttpService 
       reject(NewSessionFailure)
     }
 
-    retry(() => openUserSession, setCookiesAndRedirect, logAndReject, RetryNewSession)
-  }
-
-  def retry[S](f: () => XmlrpcResponse[S], runIfSuccess: S => Route, runIfFailure: AnyErrors => Route, times: Int = DefaultRetry): Route = {
-
-    def retryLogic(lastFailure: AnyErrors): Route = times match {
-      case n if n > 0 => retry(f, runIfSuccess, runIfFailure,times - 1)
-      case 0 => runIfFailure(lastFailure)
-      case n if n < 0 => throw new Error("Times of retry cannot be negative")
-    }
-
-    onComplete(f().underlying) {
-      case scala.util.Success(result) => result match {
-          case Success(s) => runIfSuccess(s)
-          case Failure(failure: AnyErrors) => retryLogic(failure)
-        }
-
-        case scala.util.Failure(exception: Throwable) => retryLogic(Fault(-1, exception.getMessage).wrapNel)
-    }
+    val f = () => openUserSession
+    f.retry(setCookiesAndRedirect, logAndReject, RetryNewSession)
   }
 
   override def nonAuthenticatedPhase2(token: String): Route =
