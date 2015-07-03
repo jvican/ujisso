@@ -4,6 +4,7 @@ import akka.event.LoggingAdapter
 import spray.routing.{Rejection, RejectionHandler}
 
 import scalaz.NonEmptyList
+import scala.language.reflectiveCalls
 
 sealed trait UjiError {
   val friendlyMessage: String

@@ -15,7 +15,6 @@ import xmlrpc.{Xmlrpc, XmlrpcResponse}
 
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
-import scala.language.reflectiveCalls
 import scalaz.Scalaz._
 import scalaz._
 import scalaz.Validation.FlatMap._
@@ -182,7 +181,7 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with SprayRouting
   }
 
   /**
-   * Public method because the client of the library may used this method on his own to check
+   * Public method because the client of the library may use this method on his own to check
    * if a token is valid. This check can be done out of the scope, as a `ContextAuthenticator`.
    */
   def isStillLogged(token: String): XmlrpcResponse[LoginConfirmation] =
