@@ -13,6 +13,7 @@ import xmlrpc.protocol.Deserializer.AnyErrors
 import xmlrpc.protocol.XmlrpcProtocol._
 import xmlrpc.{Xmlrpc, XmlrpcResponse}
 
+import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 import scalaz.Scalaz._
 import scalaz._
@@ -29,7 +30,7 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with SprayRouting
   implicit val timeout: Timeout = Timeout(7, TimeUnit.SECONDS)
   implicit val log: LoggingAdapter
 
-  implicit def executionContext = actorRefFactory.dispatcher
+  implicit val ec: ExecutionContext
 
   val UjiLoginEndpoint = Uri("https://" + XmlrpcPath + "lsmanage.php")
   val UjiLogoutEndpoint = Uri("https://" + XmlrpcPath + "logout_sso.php")

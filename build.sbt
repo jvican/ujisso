@@ -4,7 +4,7 @@ organization := "com.github.jvican"
 
 description := "Module to authenticate against UJI SSO (Jaume I University, Spain)"
 
-version := "1.2"
+version := "1.2.1"
 
 scalaVersion := "2.11.6"
 

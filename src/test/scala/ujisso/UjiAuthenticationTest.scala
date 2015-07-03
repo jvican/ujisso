@@ -21,6 +21,7 @@ trait MyUjiAuthentication extends UjiAuthentication {
 
 class UjiAuthenticationTest extends Specification with Specs2RouteTest with MyUjiAuthentication with Matchers {
   override implicit def actorRefFactory = system
+  implicit val ec = actorRefFactory.dispatcher
   override val log = Logging(system, "UjiTest")
 
   // Time to connect to the XML-RPC UJI server, sometimes slow
