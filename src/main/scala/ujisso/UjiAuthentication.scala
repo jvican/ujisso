@@ -15,8 +15,10 @@ import xmlrpc.{Xmlrpc, XmlrpcResponse}
 
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
+import scala.language.reflectiveCalls
 import scalaz.Scalaz._
 import scalaz._
+import scalaz.Validation.FlatMap._
 
 /**
  * Uji Authentication protocol at this moment (2015-16). Mix in to use.
@@ -202,25 +204,23 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with SprayRouting
    * @return A result with a possible failure or a success
    */
   private[ujisso] def decryptUjiToken(encodedToken: String, privateKey: String): Validation[UjiErrors, String] = {
-
     def decodeBase64(encoded: String): Validation[Decode.Failure, String] =
-      base64.Decode(encoded)
-        .right.map(new String(_))
-        .validation
+      base64.Decode(encoded).right.map(new String(_)).validation
 
     def decryptOneTimePad(rawToken: String): String =
-      rawToken.toCharArray
-        .zip(privateKey.toCharArray)
-        .map { case (m1, k1) => (m1 ^ k1).toChar } mkString
+      rawToken.toCharArray.zip(privateKey.toCharArray).map { case (m1, k1) => (m1 ^ k1).toChar } mkString
 
+    val decodedButEncrypted = decodeBase64(encodedToken)
+
+    // Validation has no WithFilter, so I cannot check here the length of the encrypted token
     val token = for {
-      encrypted <- decodeBase64(encodedToken)
+      encrypted <- decodedButEncrypted
       token <- decryptOneTimePad(encrypted).success[String]
-      if encrypted.length == privateKey.length
     } yield token
 
     token match {
-      case Success(correct: String) => correct.success[UjiErrors]
+      case Success(correct: String) if decodedButEncrypted.length == privateKey.length =>
+        correct.success[UjiErrors]
       case Failure(invalid: String) => DecryptionLengthMismatch.failureNel[String]
       case Failure(_) => InvalidToken(encodedToken).failureNel[String]
     }
