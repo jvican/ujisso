@@ -6,8 +6,8 @@ including your internship project. Well, ok, that was my case. But it can be you
 This minimal module has been ported from Java (servlets api) and php code, the only two existing alternatives until now. They were developed by the UJI itself.
 However, this library is totally __async__, built up on top of [Spray](http://www.spray.io) and [Akka](http://www.akka.io). 
   
-A good points is that there is a lot of documentation (check out source code and tests)
-because the existing alternatives were not very clear in the protocol specification. Now, if you want you can built your own library in your favorite language (Clojure, Ruby, etc) without any excuse. Just code.
+A good point is that there is a lot of documentation (check out source code and tests)
+and I have tried to be very clear in the protocol specification. Now, if you want you can built your own library in your favorite language (Clojure, Ruby, etc) without any excuse. Just read and code.
 
 ## Tell me the secret, how to use it
 First, import into your build.sbt or mvn (the following example is using SBT):  
