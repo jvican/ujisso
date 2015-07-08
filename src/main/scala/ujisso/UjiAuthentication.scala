@@ -4,7 +4,6 @@ import java.util.concurrent.TimeUnit
 
 import akka.event.LoggingAdapter
 import akka.util.Timeout
-import base64.Decode
 import spray.http.{HttpCookie, StatusCodes, Uri}
 import spray.routing._
 import ujisso.UjiError._
@@ -16,8 +15,8 @@ import xmlrpc.{Xmlrpc, XmlrpcResponse}
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 import scalaz.Scalaz._
-import scalaz._
 import scalaz.Validation.FlatMap._
+import scalaz._
 
 /**
  * Uji Authentication protocol at this moment (2015-16). Mix in to use.
@@ -172,7 +171,7 @@ trait UjiAuthentication extends UjiProtocol with UjiRejections with SprayRouting
    */
   private[ujisso] def openUserSession: XmlrpcResponse[UserSession] =
     Xmlrpc.invokeMethod[Empty, Seq[String]](GetPrivateKeyAndIndex) map ( l =>
-      UserSession(l.head, l.tail.head)
+      UserSession(l.tail.head, l.head)
     )
 
   case class LoginConfirmation(authenticatedUsername: String, token: String) {
